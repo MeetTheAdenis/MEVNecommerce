@@ -1,34 +1,36 @@
 const jwt = require("jsonwebtoken")
+const jwtSecret = "jwtSecret1234567890"
 const ObjectId = require("mongodb").ObjectId
+require("./globals")
 
 module.exports = async function (request, result, next) {
     try {
         const accessToken = request.headers.authorization.split(" ")[1]
         const decoded = jwt.verify(accessToken, jwtSecret)
-        const adminId = decoded.adminId
+        const userId = decoded.userId
 
-        const admin = await db.collection("admins").findOne({
+        const user = await global.db.collection("users").findOne({
             accessToken: accessToken
         })
 
-		if (admin == null) {
+		if (user == null) {
 			result.json({
 	            status: "error",
-	            message: "Admin has been logged out."
+	            message: "User has been logged out."
 	        })
 			return
 		}
 
-        delete admin.password
-        delete admin.accessToken
-        delete admin.createdAt
-
-        request.admin = admin
+        request.user = {
+            _id: user._id,
+            name: user.name,
+            email: user.email
+        }
         next()
     } catch (exp) {
         result.json({
             status: "error",
-            message: "Admin has been logged out."
+            message: "User has been logged out."
         })
     }
-}
+};
